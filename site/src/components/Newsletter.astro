@@ -1,7 +1,18 @@
 ---
-// Newsletter capture component
-// Submits to /api/subscribe (server-side proxy to Beehiiv)
-// Provides success / error / loading states inline without page reload
+// Newsletter placeholder block.
+//
+// The Sunday Letter is not active yet. Capture infrastructure (Beehiiv, Kit, etc.)
+// is deferred until the site has ~1,000 readers — the point at which a newsletter
+// list becomes a real asset rather than a maintenance tax.
+//
+// In the meantime, this block tells the truth, points readers to the essays
+// already live on the site, and doesn't pretend to deliver an inbox subscription
+// that won't actually arrive.
+//
+// When the time comes to switch this on, the previous integrated version is in
+// git history at commit c7149066 (Newsletter.astro: rewrite as real Beehiiv-
+// integrated capture form). The /api/subscribe route still exists and will
+// resume working the moment env vars are set.
 
 const { source = 'unknown', variant = 'default' } = Astro.props;
 ---
@@ -9,140 +20,43 @@ const { source = 'unknown', variant = 'default' } = Astro.props;
 <section class={`newsletter newsletter--${variant}`} data-source={source}>
   <div class="newsletter__inner">
     <p class="newsletter__eyebrow">The Sunday Letter</p>
-    <h2 class="newsletter__title">One essay, every Sunday. <em>No filler. No pity.</em></h2>
+    <h2 class="newsletter__title">Coming soon. <em>The essays are already here.</em></h2>
     <p class="newsletter__lede">
-      The unsparing weekly letter on what to build, in what order, and why. Free. Unsubscribe whenever.
+      The Sunday Letter — one essay every Sunday morning, no filler — launches once the first thousand readers have arrived. Until then, the four founding manifesto essays and five sovereignty pillars are free on the site, no signup required. Read at your own pace.
     </p>
-    <form class="newsletter__form js-newsletter-form">
-      <label for="newsletter-email" class="screen-reader-only">Email address</label>
-      <input
-        id="newsletter-email"
-        class="js-newsletter-email"
-        type="email"
-        name="email"
-        placeholder="you@example.com"
-        required
-        autocomplete="email"
-      />
-      <!-- Honeypot field — invisible to humans, irresistible to bots -->
-      <input
-        type="text"
-        name="website"
-        class="newsletter__honeypot js-newsletter-honeypot"
-        tabindex="-1"
-        autocomplete="off"
-        aria-hidden="true"
-      />
-      <input type="hidden" name="source" value={source} class="js-newsletter-source" />
-      <button type="submit" class="js-newsletter-submit">Subscribe</button>
-    </form>
-    <p class="newsletter__status js-newsletter-status" role="status" aria-live="polite"></p>
-    <p class="newsletter__fineprint">No spam. No advertiser noise. Unsubscribe in one click.</p>
+    <div class="newsletter__cta-row">
+      <a href="/manifesto" class="newsletter__cta">Start with the manifesto <span class="newsletter__arrow">→</span></a>
+    </div>
   </div>
 </section>
 
 <style>
-  .newsletter__honeypot {
-    position: absolute;
-    left: -9999px;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
+  .newsletter__cta-row {
+    margin-top: var(--space-6);
   }
-  .newsletter__status {
+  .newsletter__cta {
     font-family: var(--font-ui);
     font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-    min-height: 1.4em;
-    margin: var(--space-3) 0 var(--space-2);
-    color: var(--ash);
-  }
-  .newsletter__status[data-state="success"] {
-    color: var(--ember);
     font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ember);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ember);
+    padding-bottom: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    transition: gap 0.25s var(--ease-out);
   }
-  .newsletter__status[data-state="error"] {
-    color: #c0392b;
-    font-weight: 500;
+  .newsletter__cta:hover {
+    gap: var(--space-3);
   }
-  .js-newsletter-submit[data-loading="true"] {
-    opacity: 0.65;
-    cursor: progress;
+  .newsletter__arrow {
+    display: inline-block;
+    transition: transform 0.25s var(--ease-out);
+  }
+  .newsletter__cta:hover .newsletter__arrow {
+    transform: translateX(4px);
   }
 </style>
-
-<script>
-  // Wire up every newsletter form on the page.
-  // Multiple instances are safe; each independently manages its own state.
-
-  type Status = 'idle' | 'loading' | 'success' | 'error';
-
-  const forms = document.querySelectorAll<HTMLFormElement>('.js-newsletter-form');
-
-  forms.forEach((form) => {
-    const emailInput = form.querySelector<HTMLInputElement>('.js-newsletter-email');
-    const honeypot = form.querySelector<HTMLInputElement>('.js-newsletter-honeypot');
-    const sourceInput = form.querySelector<HTMLInputElement>('.js-newsletter-source');
-    const submitBtn = form.querySelector<HTMLButtonElement>('.js-newsletter-submit');
-    const statusEl = form
-      .closest('.newsletter')
-      ?.querySelector<HTMLParagraphElement>('.js-newsletter-status');
-
-    if (!emailInput || !submitBtn || !statusEl) return;
-
-    const setStatus = (state: Status, message: string) => {
-      statusEl.dataset.state = state === 'idle' ? '' : state;
-      statusEl.textContent = message;
-    };
-
-    const setLoading = (loading: boolean) => {
-      submitBtn.disabled = loading;
-      submitBtn.dataset.loading = String(loading);
-      submitBtn.textContent = loading ? 'Subscribing…' : 'Subscribe';
-    };
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const email = emailInput.value.trim();
-      const trap = honeypot?.value.trim() ?? '';
-      const source = sourceInput?.value ?? 'unknown';
-
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setStatus('error', 'Please enter a valid email address.');
-        return;
-      }
-
-      setLoading(true);
-      setStatus('idle', '');
-
-      try {
-        const res = await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source, website: trap }),
-        });
-
-        const data = (await res.json().catch(() => ({}))) as {
-          ok?: boolean;
-          message?: string;
-        };
-
-        if (res.ok && data.ok) {
-          setStatus('success', 'You\u2019re in. Check your inbox for the welcome letter.');
-          form.reset();
-        } else {
-          setStatus(
-            'error',
-            data.message ?? 'Something went wrong. Try again in a moment.',
-          );
-        }
-      } catch (err) {
-        setStatus('error', 'Network error. Try again in a moment.');
-      } finally {
-        setLoading(false);
-      }
-    });
-  });
-</script>
