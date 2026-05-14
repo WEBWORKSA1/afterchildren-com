@@ -1,0 +1,112 @@
+---
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { 
+  title, 
+  description = "Your life. Your plan. Your strength. AfterChildren is the unfiltered guide to the second half — for parents who refuse to be a burden, refuse to be invisible, and refuse to outsource their future.",
+  ogImage = "/og-default.png"
+} = Astro.props;
+
+const fullTitle = title === 'AfterChildren' ? 'AfterChildren — Your life. Your plan. Your strength.' : `${title} — AfterChildren`;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImage} />
+  
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="canonical" href={Astro.url.href} />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a href="/" class="wordmark" aria-label="AfterChildren home">
+        afterchildren<span class="wordmark__dot">.</span>
+      </a>
+      <nav>
+        <ul class="nav">
+          <li><a href="/manifesto">Manifesto</a></li>
+          <li><a href="/money">Money</a></li>
+          <li><a href="/body">Body</a></li>
+          <li><a href="/mind">Mind</a></li>
+          <li><a href="/legal">Legal</a></li>
+          <li><a href="/living">Living</a></li>
+          <li><a href="/sunday-letter">Sunday Letter</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <slot />
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div>
+        <div class="site-footer__brand">
+          afterchildren<span class="wordmark__dot">.</span>
+        </div>
+        <p class="site-footer__tagline">
+          The unfiltered guide to the second half. For parents who refuse to be a burden, refuse to be invisible, and refuse to outsource their future.
+        </p>
+      </div>
+      <div class="site-footer__col">
+        <h4>The Five</h4>
+        <ul>
+          <li><a href="/money">Financial Sovereignty</a></li>
+          <li><a href="/body">Body Sovereignty</a></li>
+          <li><a href="/mind">Mind Sovereignty</a></li>
+          <li><a href="/legal">Legal Sovereignty</a></li>
+          <li><a href="/living">Living Sovereignty</a></li>
+        </ul>
+      </div>
+      <div class="site-footer__col">
+        <h4>The Site</h4>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/manifesto">Manifesto</a></li>
+          <li><a href="/editorial-process">Editorial Process</a></li>
+          <li><a href="/sunday-letter">Sunday Letter</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="site-footer__col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+          <li><a href="/affiliate-disclosure">Affiliate Disclosure</a></li>
+          <li><a href="/ad-policy">Ad Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="site-footer__bottom">
+      <span>© 2026 AfterChildren. All rights reserved.</span>
+      <span>Not financial, medical, or legal advice. We are journalists, not advisors.</span>
+    </div>
+  </footer>
+</body>
+</html>

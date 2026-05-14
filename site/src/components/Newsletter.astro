@@ -1,0 +1,27 @@
+---
+// Newsletter capture block. Replace form action with Beehiiv endpoint when ready.
+const beehiivEndpoint = import.meta.env.PUBLIC_BEEHIIV_URL ?? '#';
+---
+
+<section class="newsletter">
+  <div class="newsletter__inner">
+    <p class="newsletter__eyebrow">The Sunday Letter</p>
+    <h2 class="newsletter__title">One essay, every Sunday. <em>No filler. No pity.</em></h2>
+    <p class="newsletter__lede">
+      The unsparing weekly letter on what to build, in what order, and why. Free. Unsubscribe whenever.
+    </p>
+    <form class="newsletter__form" action={beehiivEndpoint} method="POST">
+      <label for="email" class="screen-reader-only">Email address</label>
+      <input
+        id="email"
+        type="email"
+        name="email"
+        placeholder="you@example.com"
+        required
+        autocomplete="email"
+      />
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="newsletter__fineprint">No spam. No advertiser noise. Unsubscribe in one click.</p>
+  </div>
+</section>

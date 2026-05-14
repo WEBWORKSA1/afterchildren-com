@@ -1,0 +1,39 @@
+---
+import Base from './Base.astro';
+import Newsletter from '../components/Newsletter.astro';
+
+export interface Props {
+  title: string;
+  subtitle?: string;
+  author: string;
+  published: string;
+  readingTime?: string;
+  category?: string;
+  description?: string;
+}
+
+const { title, subtitle, author, published, readingTime, category, description } = Astro.props;
+const date = new Date(published).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<Base title={title} description={description ?? subtitle}>
+  <article class="article">
+    <header class="article__header">
+      {category && <span class="article__category">{category}</span>}
+      <h1 class="article__title">{title}</h1>
+      {subtitle && <p class="article__subtitle">{subtitle}</p>}
+      <div class="article__meta">
+        <span>By {author}</span>
+        <span>·</span>
+        <span>{date}</span>
+        {readingTime && <><span>·</span><span>{readingTime}</span></>}
+      </div>
+    </header>
+
+    <div class="article__body">
+      <slot />
+    </div>
+  </article>
+
+  <Newsletter />
+</Base>
