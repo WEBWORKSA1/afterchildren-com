@@ -122,7 +122,7 @@ import Article from '../layouts/Article.astro';
 
   <h2>What we will do</h2>
 
-  <p>We will tell you what we have found, week after week, in the language of an adult talking to another adult. We will publish a Sunday Letter every week. We will publish long, serious essays on the five sovereignties. We will publish tools — calculators, checklists, comparison guides — to help you make the calls you have to make. We will publish in plain numbers, in plain English, with no hedging.</p>
+  <p>We will tell you what we have found, week after week, in the language of an adult talking to another adult. We will publish long, serious essays on the five sovereignties. We will publish tools — calculators, checklists, comparison guides — to help you make the calls you have to make. We will publish in plain numbers, in plain English, with no hedging.</p>
 
   <p>We will admit when we are wrong. We will update articles when the data changes. We will tell you when something we recommended last year no longer holds.</p>
 
@@ -134,6 +134,43 @@ import Article from '../layouts/Article.astro';
     <strong>The Commitment</strong>
     Build yourself. Build now. Do not wait for someone to come and save you. Save yourself. You have already proven you can. You raised the children. Now raise the parent they will never have to rescue.
   </blockquote>
+
+  <h2>Where to start: the four founding essays</h2>
+
+  <p>The thesis is above. The applied work begins with four founding essays, written to be read in order. Each one takes a position that no comparable publication will take. Each one ends with concrete moves you can make this week. Together they form the foundation for everything else on this site.</p>
+
+  <ol class="founding-essays">
+    <li>
+      <span class="founding-essays__num">I.</span>
+      <div class="founding-essays__body">
+        <a href="/manifestos/you-raised-them-now-build-yourself" class="founding-essays__title">You Raised Them. Now Build Yourself.</a>
+        <p class="founding-essays__desc">The framing essay. The second half of your life is not a wind-down — it is a second build, and the project is yourself. Five domains, roughly in order. Where to start, what to build, and why most parents get the sequencing backwards.</p>
+      </div>
+    </li>
+    <li>
+      <span class="founding-essays__num">II.</span>
+      <div class="founding-essays__body">
+        <a href="/manifestos/adult-children-not-retirement-plan" class="founding-essays__title">The Hardest Truth: Your Adult Children Are Not Your Retirement Plan</a>
+        <p class="founding-essays__desc">The financial counterpart to the framing essay. The quiet assumption baked into millions of retirement plans, and the brutal math of why it fails. Includes the Medicaid five-year lookback rule and the elder-law strategy most lawyers will not bring up unless asked.</p>
+      </div>
+    </li>
+    <li>
+      <span class="founding-essays__num">III.</span>
+      <div class="founding-essays__body">
+        <a href="/manifestos/moving-in-with-kids-fails" class="founding-essays__title">Why Moving In With Your Kids Almost Always Fails</a>
+        <p class="founding-essays__desc">The living-arrangement essay. The 70% failure rate nobody warned you about, the three situations where it actually works, the failure modes that occur in months one through eighteen, and the alternative most parents never consider.</p>
+      </div>
+    </li>
+    <li>
+      <span class="founding-essays__num">IV.</span>
+      <div class="founding-essays__body">
+        <a href="/manifestos/loneliness-after-kids-leave" class="founding-essays__title">The Loneliness After Kids Leave Is Real — And Solvable</a>
+        <p class="founding-essays__desc">The psychological essay. Why the year after the last child leaves is statistically the loneliest year of most parents' adult lives, why the conventional advice fails, and the three calendar-architecture levers — dormant friends, recurring commitments, peer marriage — that actually rebuild the social infrastructure the children quietly took with them.</p>
+      </div>
+    </li>
+  </ol>
+
+  <p>Read them in order if you are new to the site. Read them out of order if a particular essay matches what is in front of you this month. Either way, the four together are the foundation that the rest of the work — the five pillars, the Tier-1 reference articles, the future tools — is built on.</p>
 
   <h2>The reader we are writing for</h2>
 
@@ -174,4 +211,74 @@ import Article from '../layouts/Article.astro';
   <p style="text-align: center; font-style: italic; font-size: var(--text-xl); margin: var(--space-16) 0;">You raised them.<br />Now build yourself.</p>
 
   <p style="text-align: center;">— <em>M. Holloway</em><br /><em>Founder, AfterChildren</em><br /><em>May 2026</em></p>
+</Article>
+
+<style is:global>
+  /* Founding essays list — scoped to the manifesto founding doc only.
+     The numbered list of the four founding manifestos that complete the
+     foundation. Treated visually like a small editorial table of
+     contents, with roman numerals matching the manifesto subtitles. */
+
+  .founding-essays {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-8) 0;
+    border-top: 1px solid var(--stone);
+  }
+
+  .founding-essays li {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: var(--space-4);
+    padding: var(--space-6) 0;
+    border-bottom: 1px solid var(--stone);
+    align-items: baseline;
+  }
+
+  @media (min-width: 700px) {
+    .founding-essays li {
+      grid-template-columns: 4rem 1fr;
+      gap: var(--space-6);
+      padding: var(--space-8) 0;
+    }
+  }
+
+  .founding-essays__num {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ember);
+    line-height: 1;
+  }
+
+  .founding-essays__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .founding-essays__title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 0;
+  }
+
+  .founding-essays__title:hover {
+    color: var(--ember);
+  }
+
+  .founding-essays__desc {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--ash);
+    margin: 0;
+  }
+</style>
 </Article>
