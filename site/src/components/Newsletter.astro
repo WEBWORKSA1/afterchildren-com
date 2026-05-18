@@ -9,10 +9,17 @@
 // already live on the site, and doesn't pretend to deliver an inbox subscription
 // that won't actually arrive.
 //
-// When the time comes to switch this on, the previous integrated version is in
-// git history at commit c7149066 (Newsletter.astro: rewrite as real Beehiiv-
-// integrated capture form). The /api/subscribe route still exists and will
-// resume working the moment env vars are set.
+// When the time comes to switch this on:
+//   1. Restore the previous integrated version from git history at commit
+//      c7149066 (Newsletter.astro: rewrite as real Beehiiv-integrated capture form).
+//   2. Restore /api/subscribe.ts from git history (deleted 2026-05-18 in commit
+//      7c8fa183 when we switched to a pure static build). Recover via:
+//      git show 9721b6b4:site/src/pages/api/subscribe.ts > site/src/pages/api/subscribe.ts
+//   3. Switch astro.config.mjs back to output: 'hybrid' + @astrojs/vercel/serverless
+//      adapter (see comments there).
+//   4. Update vercel.json outputDirectory to match the serverless adapter
+//      (or remove it and let Build Output API discovery handle it).
+//   5. Set BEEHIIV_API_KEY and BEEHIIV_PUBLICATION_ID env vars in Vercel.
 
 const { source = 'unknown', variant = 'default' } = Astro.props;
 ---

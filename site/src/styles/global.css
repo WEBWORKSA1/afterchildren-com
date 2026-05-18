@@ -535,6 +535,10 @@ em { font-style: italic; }
     padding: 0 var(--space-12);
     grid-template-columns: 2fr 1fr 1fr 1fr;
   }
+  /* Three-column variant: brand block stays wide, two link columns. */
+  .site-footer__inner--three-col {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
 }
 .site-footer__brand {
   font-family: var(--font-display);
