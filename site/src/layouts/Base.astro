@@ -54,6 +54,7 @@ const fullTitle = title === 'AfterChildren' ? 'AfterChildren — Your life. Your
           <li><a href="/legal">Legal</a></li>
           <li><a href="/living">Living</a></li>
           <li><a href="/sunday-letter">Sunday Letter</a></li>
+          <li class="nav__cta"><a href="/start">Start →</a></li>
         </ul>
       </nav>
     </div>
@@ -87,6 +88,7 @@ const fullTitle = title === 'AfterChildren' ? 'AfterChildren — Your life. Your
         <h4>The Site</h4>
         <ul>
           <li><a href="/manifesto">Manifesto</a></li>
+          <li><a href="/start">Self-Assessment</a></li>
           <li><a href="/sunday-letter">Sunday Letter</a></li>
         </ul>
       </div>
@@ -98,3 +100,19 @@ const fullTitle = title === 'AfterChildren' ? 'AfterChildren — Your life. Your
   </footer>
 </body>
 </html>
+
+<style>
+  /* Nav CTA — the "Start" link gets visual elevation in the header.
+     It's the one nav item that promises action rather than reading,
+     so it deserves the visual weight of an ember-bordered button-
+     adjacent treatment. Still text-only, no rounded buttons. */
+  .nav__cta a {
+    color: var(--ember);
+    border-bottom: 1px solid var(--ember);
+    padding-bottom: 3px;
+  }
+  .nav__cta a:hover {
+    color: var(--ember-hover);
+    border-bottom-color: var(--ember-hover);
+  }
+</style>
