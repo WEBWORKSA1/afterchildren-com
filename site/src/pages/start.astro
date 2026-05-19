@@ -1,0 +1,1071 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Start"
+  description="A 5-minute self-assessment that returns your personalized reading order through AfterChildren. Ten questions. No email required. Nothing stored. Honest editorial guidance, not a marketing funnel."
+>
+  <!-- INTRO STATE -->
+  <section class="page" id="start-intro">
+    <div class="start-intro">
+      <p class="start-intro__eyebrow">Self-assessment</p>
+      <h1 class="start-intro__title">
+        Ten questions. Five minutes.<br />
+        <em>A reading order built for your situation.</em>
+      </h1>
+      <p class="start-intro__lede">
+        AfterChildren publishes long essays across five sovereignties: Body, Money, Mind, Legal, Living. Most readers don't need to read all of it. They need to read the right three articles, in the right order, for where their life actually is. This assessment returns that order.
+      </p>
+
+      <div class="start-intro__rules">
+        <h2 class="start-intro__rules-title">The rules of this assessment</h2>
+        <ol class="start-intro__rules-list">
+          <li>This runs entirely in your browser. Nothing is sent to us. Nothing is stored. Refresh the page and the answers are gone.</li>
+          <li>No email is collected. No account is created. There is no "send me my results" form at the end.</li>
+          <li>The recommendation is prescriptive — we tell you what to read first, not what you'd enjoy reading. The order is the recommendation.</li>
+          <li>The assessment is editorial guidance, not financial, medical, or legal advice. Your actual situation will always have more nuance than ten questions can capture.</li>
+        </ol>
+      </div>
+
+      <button class="start-intro__begin" id="start-begin">
+        Begin the assessment
+        <span class="start-intro__arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- QUIZ STATE -->
+  <section class="page start-quiz" id="start-quiz" hidden>
+    <div class="start-quiz__progress">
+      <span id="quiz-progress-text">Question 1 of 10</span>
+    </div>
+    <div class="start-quiz__container" id="quiz-container">
+      <!-- Questions injected by JS -->
+    </div>
+  </section>
+
+  <!-- RESULT STATE -->
+  <section class="page start-result" id="start-result" hidden>
+    <div class="start-result__container" id="result-container">
+      <!-- Result injected by JS -->
+    </div>
+  </section>
+</Base>
+
+<script>
+  /* =========================================================
+     AfterChildren — Sovereignty Self-Assessment
+     Ten questions. Deterministic scoring. Editorial recommendation.
+
+     ARCHITECTURE
+     ------------
+     QUESTIONS array: source of truth for question text + options.
+       Each option carries a `scores` object that contributes points
+       to one or more sovereignty domains (body/money/mind/legal/living).
+       Some options also set `flags` for specific situations (e.g.
+       "loneliness-match" triggers a specific manifesto recommendation
+       on the result page).
+
+     STATE: answers[] holds the index of the chosen option per question.
+       Plus currentQuestion (0-9) and a flags Set.
+
+     SCORING: when assessment completes, walk every answer, accumulate
+       scores per sovereignty, then sort descending. Top 3 become the
+       reading order.
+
+     RECOMMENDATIONS: each sovereignty has a primary article+manifesto
+       mapping. The top sovereignty gets its primary article promoted
+       as "Start here." Flags can override the manifesto recommendation
+       (e.g. loneliness flag overrides whatever the score-based default
+       would have been).
+
+     PRIVACY: zero network calls. Nothing is persisted. Refreshing the
+       page resets state. This is stated openly in the intro because
+       it's a meaningful editorial differentiation from typical
+       email-capture quiz funnels.
+     ========================================================= */
+
+  const QUESTIONS = [
+    {
+      id: 'q1',
+      text: 'Where are you in the parenting transition?',
+      options: [
+        { label: 'All children launched, in the last 0–2 years', scores: { mind: 3, legal: 1 } },
+        { label: 'All children launched, more than 2 years ago', scores: { money: 2, legal: 2, living: 1 } },
+        { label: 'Last child still finishing university or training', scores: { money: 3, mind: 1 } },
+        { label: 'Mixed — some launched, some still home', scores: { money: 2, mind: 2 } }
+      ]
+    },
+    {
+      id: 'q2',
+      text: "What's your age range?",
+      options: [
+        { label: '50 to 58', scores: { body: 2, money: 2, mind: 1 } },
+        { label: '59 to 66', scores: { money: 3, legal: 2, body: 1 } },
+        { label: '67 to 74', scores: { legal: 3, living: 2, body: 1 } },
+        { label: '75 or older', scores: { legal: 3, living: 3, body: 2 } }
+      ]
+    },
+    {
+      id: 'q3',
+      text: 'Pick the statement that fits best right now.',
+      options: [
+        { label: "I'm not sure my money will last", scores: { money: 4 } },
+        { label: "I'm not sure who I am without the kids", scores: { mind: 4 }, flags: ['identity-match'] },
+        { label: "I'm worried about my health and mobility going forward", scores: { body: 4 } },
+        { label: "I have legal and paperwork I've been putting off", scores: { legal: 4 } },
+        { label: "I'm thinking about where I'll live in 10 to 20 years", scores: { living: 4 } }
+      ]
+    },
+    {
+      id: 'q4',
+      text: 'Have you written or updated a will in the last five years?',
+      options: [
+        { label: 'Yes, recently', scores: { legal: 0 } },
+        { label: 'No, never written one', scores: { legal: 4 }, flags: ['legal-urgent'] },
+        { label: 'I wrote one, but more than five years ago', scores: { legal: 3 }, flags: ['legal-stale'] }
+      ]
+    },
+    {
+      id: 'q5',
+      text: 'Are you in a marriage or long-term partnership?',
+      options: [
+        { label: 'Yes, and it feels stable', scores: { mind: 0 } },
+        { label: 'Yes, but going through a difficult year', scores: { mind: 3 }, flags: ['marriage-strain'] },
+        { label: 'No — single, divorced, or widowed', scores: { mind: 2, living: 1 } }
+      ]
+    },
+    {
+      id: 'q6',
+      text: 'Do you currently work?',
+      options: [
+        { label: 'Full-time', scores: { money: 2 } },
+        { label: 'Part-time', scores: { money: 1, mind: 1 } },
+        { label: 'Retired', scores: { money: 2, mind: 1, living: 1 } },
+        { label: 'Retired but considering going back', scores: { money: 3, mind: 2 } }
+      ]
+    },
+    {
+      id: 'q7',
+      text: 'How would you describe your social calendar?',
+      options: [
+        { label: 'Full — multiple recurring commitments per week', scores: { mind: 0 } },
+        { label: 'Some — a few regular contact points', scores: { mind: 1 } },
+        { label: 'Sparse — most weeks have no scheduled social contact', scores: { mind: 4 }, flags: ['loneliness-match'] },
+        { label: "I haven't thought about it that way", scores: { mind: 2 }, flags: ['loneliness-match'] }
+      ]
+    },
+    {
+      id: 'q8',
+      text: 'Have you had a serious conversation with your adult children about your retirement, care, or estate plans?',
+      options: [
+        { label: 'Yes, recently', scores: { legal: 0 } },
+        { label: 'Yes, but years ago', scores: { legal: 2, money: 1 } },
+        { label: 'No', scores: { legal: 3, money: 2 }, flags: ['inheritance-conversation'] }
+      ]
+    },
+    {
+      id: 'q9',
+      text: 'Do you exercise regularly?',
+      options: [
+        { label: 'Strength training 2x per week or more', scores: { body: 0 } },
+        { label: 'Cardio regularly (walks, cycling, swimming)', scores: { body: 2 } },
+        { label: 'Some movement, but inconsistent', scores: { body: 3 } },
+        { label: 'Not really', scores: { body: 4 }, flags: ['body-urgent'] }
+      ]
+    },
+    {
+      id: 'q10',
+      text: 'If you had to pick one thing to address this year, which would it be?',
+      options: [
+        { label: 'My finances', scores: { money: 3 }, flags: ['focus-money'] },
+        { label: 'My health and body', scores: { body: 3 }, flags: ['focus-body'] },
+        { label: 'My relationships and meaning', scores: { mind: 3 }, flags: ['focus-mind'] },
+        { label: 'My legal and estate paperwork', scores: { legal: 3 }, flags: ['focus-legal'] },
+        { label: 'Where and how I will live going forward', scores: { living: 3 }, flags: ['focus-living'] }
+      ]
+    }
+  ];
+
+  // Sovereignty metadata for the result page
+  const SOVEREIGNTY_DATA = {
+    body: {
+      name: 'Body sovereignty',
+      pillarPath: '/body',
+      tagline: 'The foundation. Everything else sits on it.',
+      reasonStrong: 'Your body work is the gap nothing else can compensate for. Strength training is not optional, and the window to build it is the next decade.',
+      reasonLeading: 'The body pillar is currently in development. The manifesto framework below applies.',
+      primaryArticle: null,
+      primaryArticleNote: 'The Body pillar reading list is in progress. For now, the framing essay below applies.'
+    },
+    money: {
+      name: 'Money sovereignty',
+      pillarPath: '/money',
+      tagline: 'The fuel. Without it, nothing else is optional.',
+      reasonStrong: 'The Medicare decision, the retirement math, and the long-term care question all sit in your near future. The decisions made in your 60s tend to lock in for life.',
+      reasonLeading: 'Your finances are approaching one or more decisions that compound for decades.',
+      primaryArticle: {
+        title: 'Medicare Advantage vs Medigap: The Honest Comparison for 2026',
+        path: '/money/medicare-advantage-vs-medigap-2026',
+        readingTime: '16 min',
+        excerpt: 'The decision that locks in for life — and the marketing that obscures it. The five dimensions that actually matter, and the honest answer for most healthy 65-year-olds.'
+      }
+    },
+    mind: {
+      name: 'Mind sovereignty',
+      pillarPath: '/mind',
+      tagline: 'The structure that holds the meaning.',
+      reasonStrong: 'The psychological work of the empty nest is structural, not emotional. The social architecture that the children quietly provided has collapsed, and rebuilding it has to be deliberate.',
+      reasonLeading: 'The interior architecture of the second half is not built by default. The work is identifiable and tractable.',
+      primaryArticle: {
+        title: 'The Loneliness After Kids Leave Is Real — And Solvable',
+        path: '/manifestos/loneliness-after-kids-leave',
+        readingTime: '14 min',
+        excerpt: 'Why the year after the last child leaves is the loneliest year of most parents\' adult lives — and the three calendar-architecture levers that actually resolve it.'
+      }
+    },
+    legal: {
+      name: 'Legal sovereignty',
+      pillarPath: '/legal',
+      tagline: 'The walls. The protections against the worst outcomes.',
+      reasonStrong: 'Your estate paperwork is the highest-leverage place to act because the deadline is invisible until it is past. Five documents, one Saturday morning, roughly $300.',
+      reasonLeading: 'There are documents your family will need at the worst moment of their lives that you almost certainly do not have in current form.',
+      primaryArticle: {
+        title: "The Five Documents Every Adult Over 55 Needs (And Most People Don't Have)",
+        path: '/legal/five-essential-documents-over-55',
+        readingTime: '13 min',
+        excerpt: 'What each document costs, what happens to your family without it, and the Saturday-morning execution plan to complete all five in one sitting.'
+      }
+    },
+    living: {
+      name: 'Living sovereignty',
+      pillarPath: '/living',
+      tagline: 'The roof. Where and how you live for the next 30 years.',
+      reasonStrong: 'The where-to-live decision has the highest variance and the least examination of any major decision in the second half. Done late, it is forced from weakness.',
+      reasonLeading: 'The decisions about where and how you live in your 70s and 80s benefit from being made with deliberation in your 60s.',
+      primaryArticle: null,
+      primaryArticleNote: 'The Living pillar reading list is in progress. For now, the framing essay below applies.'
+    }
+  };
+
+  // Manifesto matching — flag-driven overrides + score-based defaults
+  const MANIFESTOS = {
+    foundational: {
+      key: 'foundational',
+      label: 'Manifesto I',
+      title: 'You Raised Them. Now Build Yourself.',
+      path: '/manifestos/you-raised-them-now-build-yourself',
+      readingTime: '14 min',
+      excerpt: 'The framing essay. The second half of your life is not a wind-down — it is a second build, and the project is yourself.'
+    },
+    retirement: {
+      key: 'retirement',
+      label: 'Manifesto II',
+      title: 'The Hardest Truth: Your Adult Children Are Not Your Retirement Plan',
+      path: '/manifestos/adult-children-not-retirement-plan',
+      readingTime: '15 min',
+      excerpt: 'The quiet assumption baked into millions of retirement plans, and the brutal math of why it fails.'
+    },
+    moving: {
+      key: 'moving',
+      label: 'Manifesto III',
+      title: 'Why Moving In With Your Kids Almost Always Fails',
+      path: '/manifestos/moving-in-with-kids-fails',
+      readingTime: '14 min',
+      excerpt: 'The 70% failure rate nobody warned you about, the three situations where it actually works, and the alternative most parents never consider.'
+    },
+    loneliness: {
+      key: 'loneliness',
+      label: 'Manifesto IV',
+      title: 'The Loneliness After Kids Leave Is Real — And Solvable',
+      path: '/manifestos/loneliness-after-kids-leave',
+      readingTime: '14 min',
+      excerpt: 'Why the year after the last child leaves is statistically the loneliest year of most parents\' adult lives — and the structural fix that actually works.'
+    }
+  };
+
+  // ----- State -----
+  const state = {
+    answers: new Array(QUESTIONS.length).fill(null),
+    currentQuestion: 0,
+    flags: new Set()
+  };
+
+  // ----- Element references -----
+  const introEl = document.getElementById('start-intro');
+  const quizEl = document.getElementById('start-quiz');
+  const resultEl = document.getElementById('start-result');
+  const beginBtn = document.getElementById('start-begin');
+  const progressText = document.getElementById('quiz-progress-text');
+  const quizContainer = document.getElementById('quiz-container');
+  const resultContainer = document.getElementById('result-container');
+
+  // ----- Show / hide states -----
+  function showState(which) {
+    introEl.hidden = which !== 'intro';
+    quizEl.hidden = which !== 'quiz';
+    resultEl.hidden = which !== 'result';
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  // ----- Render current question -----
+  function renderCurrentQuestion() {
+    const q = QUESTIONS[state.currentQuestion];
+    progressText.textContent = `Question ${state.currentQuestion + 1} of ${QUESTIONS.length}`;
+
+    const optionsHtml = q.options.map((opt, idx) => {
+      const isSelected = state.answers[state.currentQuestion] === idx;
+      return `
+        <button
+          class="quiz-option${isSelected ? ' quiz-option--selected' : ''}"
+          data-option-index="${idx}"
+        >
+          <span class="quiz-option__marker"></span>
+          <span class="quiz-option__label">${opt.label}</span>
+        </button>
+      `;
+    }).join('');
+
+    const backBtn = state.currentQuestion > 0
+      ? `<button class="quiz-nav quiz-nav--back" id="quiz-back">← Back</button>`
+      : `<span></span>`;
+
+    const isLast = state.currentQuestion === QUESTIONS.length - 1;
+    const nextBtnLabel = isLast ? 'See my reading order →' : 'Next →';
+    const nextBtnDisabled = state.answers[state.currentQuestion] === null;
+    const nextBtn = `
+      <button
+        class="quiz-nav quiz-nav--next"
+        id="quiz-next"
+        ${nextBtnDisabled ? 'disabled' : ''}
+      >${nextBtnLabel}</button>
+    `;
+
+    quizContainer.innerHTML = `
+      <div class="quiz-question">
+        <h2 class="quiz-question__text">${q.text}</h2>
+        <div class="quiz-options">${optionsHtml}</div>
+        <div class="quiz-controls">${backBtn}${nextBtn}</div>
+      </div>
+    `;
+
+    // Wire up handlers
+    document.querySelectorAll('.quiz-option').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.optionIndex, 10);
+        state.answers[state.currentQuestion] = idx;
+        renderCurrentQuestion();
+      });
+    });
+
+    const nextBtnEl = document.getElementById('quiz-next');
+    if (nextBtnEl) {
+      nextBtnEl.addEventListener('click', () => {
+        if (state.answers[state.currentQuestion] === null) return;
+        if (state.currentQuestion < QUESTIONS.length - 1) {
+          state.currentQuestion += 1;
+          renderCurrentQuestion();
+        } else {
+          completeAssessment();
+        }
+      });
+    }
+
+    const backBtnEl = document.getElementById('quiz-back');
+    if (backBtnEl) {
+      backBtnEl.addEventListener('click', () => {
+        if (state.currentQuestion > 0) {
+          state.currentQuestion -= 1;
+          renderCurrentQuestion();
+        }
+      });
+    }
+  }
+
+  // ----- Scoring -----
+  function scoreAssessment() {
+    const scores = { body: 0, money: 0, mind: 0, legal: 0, living: 0 };
+    state.flags = new Set();
+
+    state.answers.forEach((answerIdx, qIdx) => {
+      if (answerIdx === null) return;
+      const opt = QUESTIONS[qIdx].options[answerIdx];
+      Object.entries(opt.scores).forEach(([k, v]) => { scores[k] += v; });
+      if (opt.flags) opt.flags.forEach((f) => state.flags.add(f));
+    });
+
+    // Q10 has explicit focus declaration — give it a stable weight bonus
+    // so the user's stated priority always ranks in the top 2.
+    const q10Answer = state.answers[9];
+    if (q10Answer !== null) {
+      const focusOpt = QUESTIONS[9].options[q10Answer];
+      Object.entries(focusOpt.scores).forEach(([k]) => { scores[k] += 1; });
+    }
+
+    return scores;
+  }
+
+  function getReadingOrder(scores) {
+    return Object.entries(scores)
+      .sort((a, b) => b[1] - a[1])
+      .map(([key]) => key);
+  }
+
+  // ----- Manifesto match (flag-priority) -----
+  function getManifestoMatch() {
+    if (state.flags.has('loneliness-match') || state.flags.has('identity-match')) {
+      return MANIFESTOS.loneliness;
+    }
+    if (state.flags.has('inheritance-conversation') && state.flags.has('focus-money')) {
+      return MANIFESTOS.retirement;
+    }
+    if (state.flags.has('legal-urgent') || state.flags.has('legal-stale')) {
+      return MANIFESTOS.retirement;
+    }
+    if (state.flags.has('focus-living')) {
+      return MANIFESTOS.moving;
+    }
+    // Default to the framing manifesto
+    return MANIFESTOS.foundational;
+  }
+
+  // ----- Manifesto match explanation -----
+  function getManifestoMatchReason(manifesto) {
+    if (manifesto.key === 'loneliness') {
+      if (state.flags.has('identity-match')) {
+        return 'You said the statement that fits best right now is "I\'m not sure who I am without the kids." This is the manifesto on that exact question.';
+      }
+      return 'Your answers suggest the social architecture that the children provided has thinned more than you may realize. This is the manifesto on that.';
+    }
+    if (manifesto.key === 'retirement') {
+      if (state.flags.has('legal-urgent')) {
+        return 'You have no will in place. This manifesto covers the harder underlying question of why the financial and legal work matters more than parents typically realize.';
+      }
+      if (state.flags.has('inheritance-conversation')) {
+        return 'You have not yet had the serious inheritance and care-plan conversation with your adult children. This manifesto frames why that conversation has to happen earlier than feels comfortable.';
+      }
+      return 'Your situation suggests the underlying financial question is the right place for the harder-truth essay.';
+    }
+    if (manifesto.key === 'moving') {
+      return 'You said the where-to-live decision is what you want to address this year. This manifesto names the most common failure mode and the alternatives most parents never consider.';
+    }
+    return 'This is the framing essay that underlies the entire site. If you read nothing else, read this.';
+  }
+
+  // ----- Render result -----
+  function renderResult() {
+    const scores = scoreAssessment();
+    const order = getReadingOrder(scores);
+    const top3 = order.slice(0, 3);
+    const manifesto = getManifestoMatch();
+    const manifestoReason = getManifestoMatchReason(manifesto);
+
+    // Q10 declared focus
+    const q10Answer = state.answers[9];
+    const q10Label = q10Answer !== null ? QUESTIONS[9].options[q10Answer].label : null;
+
+    // Build top-3 reading order HTML
+    const readingOrderHtml = top3.map((key, idx) => {
+      const data = SOVEREIGNTY_DATA[key];
+      const isTopChoice = idx === 0;
+      const reasonText = isTopChoice ? data.reasonStrong : data.reasonLeading;
+
+      const articleBlock = data.primaryArticle
+        ? `
+          <a href="${data.primaryArticle.path}" class="result-step__article">
+            <span class="result-step__article-meta">${data.primaryArticle.readingTime} · the cornerstone article</span>
+            <h4 class="result-step__article-title">${data.primaryArticle.title}</h4>
+            <p class="result-step__article-excerpt">${data.primaryArticle.excerpt}</p>
+            <span class="result-step__article-cta">Read the article →</span>
+          </a>
+        `
+        : `
+          <div class="result-step__pending">
+            <p>${data.primaryArticleNote}</p>
+            <a href="${data.pillarPath}" class="result-step__pillar-link">Visit the ${data.name.toLowerCase()} pillar →</a>
+          </div>
+        `;
+
+      const stepLabel = idx === 0 ? 'Start here' : idx === 1 ? 'Then' : 'Then';
+
+      return `
+        <li class="result-step">
+          <div class="result-step__num">${String(idx + 1).padStart(2, '0')}</div>
+          <div class="result-step__body">
+            <p class="result-step__label">${stepLabel}: ${data.name}</p>
+            <p class="result-step__reason">${reasonText}</p>
+            ${articleBlock}
+          </div>
+        </li>
+      `;
+    }).join('');
+
+    // Build manifesto match block
+    const manifestoBlockHtml = `
+      <div class="result-manifesto">
+        <p class="result-manifesto__eyebrow">The manifesto that matches your situation</p>
+        <p class="result-manifesto__reason">${manifestoReason}</p>
+        <a href="${manifesto.path}" class="result-manifesto__card">
+          <span class="result-manifesto__label">${manifesto.label} · ${manifesto.readingTime}</span>
+          <h3 class="result-manifesto__title">${manifesto.title}</h3>
+          <p class="result-manifesto__excerpt">${manifesto.excerpt}</p>
+          <span class="result-manifesto__cta">Read the essay →</span>
+        </a>
+      </div>
+    `;
+
+    // Build "your long view" block — what reader said they'd address this year
+    const longViewHtml = q10Label
+      ? `
+        <div class="result-longview">
+          <p class="result-longview__eyebrow">Your stated focus</p>
+          <p class="result-longview__text">
+            You said the one thing you'd address this year is <strong>${q10Label.toLowerCase()}</strong>. The reading order above is built around that priority. Once you've worked through the first article above, the full pillar map for that domain is the next step.
+          </p>
+        </div>
+      `
+      : '';
+
+    resultContainer.innerHTML = `
+      <div class="result">
+        <p class="result__eyebrow">Your reading order</p>
+        <h1 class="result__title">
+          Three places to start.<br />
+          <em>Ordered by leverage, not by ease.</em>
+        </h1>
+        <p class="result__lede">
+          Based on your answers, the work you've been postponing is in three places. We've ordered them by where the highest-leverage move is — not by what's easiest. Each comes with the cornerstone article for that sovereignty.
+        </p>
+
+        <ol class="result-steps">
+          ${readingOrderHtml}
+        </ol>
+
+        ${manifestoBlockHtml}
+
+        ${longViewHtml}
+
+        <div class="result-restart">
+          <button id="result-restart-btn" class="result-restart__btn">Restart the assessment</button>
+          <p class="result-restart__note">Nothing was saved. Refresh the page and your answers are gone.</p>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('result-restart-btn').addEventListener('click', () => {
+      state.answers = new Array(QUESTIONS.length).fill(null);
+      state.currentQuestion = 0;
+      state.flags = new Set();
+      showState('intro');
+    });
+  }
+
+  function completeAssessment() {
+    renderResult();
+    showState('result');
+  }
+
+  // ----- Wire intro -----
+  beginBtn.addEventListener('click', () => {
+    renderCurrentQuestion();
+    showState('quiz');
+  });
+</script>
+
+<style>
+  /* =========================================================
+     /start — Self-Assessment Page
+     Editorial Gravitas. No quiz-app theatrics.
+     ========================================================= */
+
+  /* ----- INTRO STATE ----- */
+  .start-intro {
+    padding: var(--space-24) 0;
+    max-width: 42rem;
+  }
+  .start-intro__eyebrow {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: var(--space-6);
+  }
+  .start-intro__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5.5vw, var(--text-4xl));
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-8);
+    font-variation-settings: 'opsz' 144, 'SOFT' 100;
+  }
+  .start-intro__title em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--ember);
+  }
+  .start-intro__lede {
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    line-height: 1.55;
+    color: var(--ash);
+    margin-bottom: var(--space-12);
+  }
+  .start-intro__rules {
+    padding: var(--space-8) 0;
+    border-top: 1px solid var(--stone);
+    border-bottom: 1px solid var(--stone);
+    margin-bottom: var(--space-12);
+  }
+  .start-intro__rules-title {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: var(--space-6);
+  }
+  .start-intro__rules-list {
+    list-style: decimal;
+    padding-left: var(--space-6);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .start-intro__rules-list li {
+    margin-bottom: var(--space-3);
+  }
+  .start-intro__rules-list li:last-child { margin-bottom: 0; }
+
+  .start-intro__begin {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    background: var(--ink);
+    color: var(--bone);
+    border: 0;
+    padding: var(--space-6) var(--space-12);
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.25s var(--ease-out), gap 0.25s var(--ease-out);
+  }
+  .start-intro__begin:hover {
+    background: var(--ember);
+    gap: var(--space-6);
+  }
+  .start-intro__arrow {
+    display: inline-block;
+    transition: transform 0.25s var(--ease-out);
+  }
+  .start-intro__begin:hover .start-intro__arrow {
+    transform: translateX(4px);
+  }
+
+  /* ----- QUIZ STATE ----- */
+  .start-quiz {
+    padding: var(--space-24) 0;
+    max-width: 42rem;
+    margin: 0 auto;
+  }
+  .start-quiz__progress {
+    font-family: var(--font-ui);
+    font-size: var(--text-3xs);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--stone);
+  }
+  .quiz-question__text {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4vw, var(--text-2xl));
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-12);
+    color: var(--ink);
+  }
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: var(--space-12);
+    border-top: 1px solid var(--stone);
+  }
+  .quiz-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-6) var(--space-2);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--stone);
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s var(--ease-out), padding-left 0.25s var(--ease-out);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.55;
+    color: var(--ink);
+    width: 100%;
+  }
+  .quiz-option:hover {
+    background: rgba(181, 66, 30, 0.04);
+    padding-left: var(--space-6);
+  }
+  .quiz-option__marker {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--ash);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  }
+  .quiz-option--selected {
+    background: rgba(181, 66, 30, 0.06);
+    padding-left: var(--space-6);
+  }
+  .quiz-option--selected .quiz-option__marker {
+    border-color: var(--ember);
+    background: var(--ember);
+    box-shadow: inset 0 0 0 3px var(--bone);
+  }
+  .quiz-option__label {
+    flex: 1;
+  }
+  .quiz-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--stone);
+  }
+  .quiz-nav {
+    background: transparent;
+    border: 0;
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s var(--ease-out);
+  }
+  .quiz-nav--back {
+    color: var(--ash);
+  }
+  .quiz-nav--back:hover {
+    color: var(--ink);
+  }
+  .quiz-nav--next {
+    color: var(--ember);
+    border-bottom: 1px solid var(--ember);
+    padding-bottom: 3px;
+  }
+  .quiz-nav--next:hover {
+    color: var(--ember-hover);
+    border-bottom-color: var(--ember-hover);
+  }
+  .quiz-nav--next:disabled {
+    color: var(--stone);
+    border-bottom-color: var(--stone);
+    cursor: not-allowed;
+  }
+
+  /* ----- RESULT STATE ----- */
+  .start-result {
+    padding: var(--space-24) 0;
+  }
+  .result {
+    max-width: 44rem;
+    margin: 0 auto;
+  }
+  .result__eyebrow {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: var(--space-6);
+  }
+  .result__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5.5vw, var(--text-4xl));
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-8);
+    font-variation-settings: 'opsz' 144, 'SOFT' 100;
+  }
+  .result__title em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--ember);
+  }
+  .result__lede {
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    line-height: 1.55;
+    color: var(--ash);
+    margin-bottom: var(--space-16);
+  }
+  .result-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-16) 0;
+    border-top: 1px solid var(--stone);
+  }
+  .result-step {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: var(--space-6);
+    padding: var(--space-12) 0;
+    border-bottom: 1px solid var(--stone);
+  }
+  @media (min-width: 700px) {
+    .result-step {
+      grid-template-columns: 5rem 1fr;
+      gap: var(--space-8);
+    }
+  }
+  .result-step__num {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ember);
+    line-height: 1;
+  }
+  .result-step__label {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: var(--space-4);
+  }
+  .result-step__reason {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: var(--space-8);
+  }
+  .result-step__article {
+    display: block;
+    background: rgba(181, 66, 30, 0.03);
+    border-left: 3px solid var(--ember);
+    padding: var(--space-6) var(--space-8);
+    text-decoration: none;
+    color: var(--ink);
+    border-bottom: 0;
+    transition: background 0.25s var(--ease-out);
+  }
+  .result-step__article:hover {
+    background: rgba(181, 66, 30, 0.07);
+    color: var(--ink);
+  }
+  .result-step__article-meta {
+    font-family: var(--font-ui);
+    font-size: var(--text-3xs);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: var(--space-3);
+    display: block;
+  }
+  .result-step__article-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-3);
+    color: var(--ink);
+  }
+  .result-step__article-excerpt {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--ash);
+    margin-bottom: var(--space-4);
+  }
+  .result-step__article-cta {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ember);
+    display: inline-block;
+  }
+  .result-step__pending {
+    padding: var(--space-6) var(--space-8);
+    background: rgba(217, 210, 197, 0.2);
+    border-left: 3px solid var(--stone);
+  }
+  .result-step__pending p {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--ash);
+    margin-bottom: var(--space-4);
+  }
+  .result-step__pillar-link {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ember);
+    border-bottom: 1px solid var(--ember);
+    padding-bottom: 2px;
+    text-decoration: none;
+  }
+
+  /* ----- Manifesto match block ----- */
+  .result-manifesto {
+    padding: var(--space-12) 0;
+    border-bottom: 1px solid var(--stone);
+    margin-bottom: var(--space-12);
+  }
+  .result-manifesto__eyebrow {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: var(--space-4);
+  }
+  .result-manifesto__reason {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: var(--space-8);
+  }
+  .result-manifesto__card {
+    display: block;
+    background: var(--ink);
+    color: var(--bone);
+    padding: var(--space-8);
+    text-decoration: none;
+    border-bottom: 0;
+    transition: background 0.25s var(--ease-out);
+  }
+  @media (min-width: 700px) {
+    .result-manifesto__card { padding: var(--space-12); }
+  }
+  .result-manifesto__card:hover {
+    background: #1c2129;
+    color: var(--bone);
+  }
+  .result-manifesto__label {
+    font-family: var(--font-ui);
+    font-size: var(--text-3xs);
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #E07A4F;
+    margin-bottom: var(--space-4);
+    display: block;
+  }
+  .result-manifesto__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, var(--text-2xl));
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--bone);
+    margin-bottom: var(--space-4);
+    font-variation-settings: 'opsz' 144;
+  }
+  .result-manifesto__excerpt {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    color: rgba(245, 241, 234, 0.75);
+    margin-bottom: var(--space-6);
+  }
+  .result-manifesto__cta {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #E07A4F;
+  }
+
+  /* ----- Long view block ----- */
+  .result-longview {
+    padding: var(--space-8) 0;
+    margin-bottom: var(--space-16);
+  }
+  .result-longview__eyebrow {
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: var(--space-4);
+  }
+  .result-longview__text {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .result-longview__text strong {
+    font-weight: 600;
+    color: var(--ember);
+  }
+
+  /* ----- Restart block ----- */
+  .result-restart {
+    padding-top: var(--space-12);
+    border-top: 1px solid var(--stone);
+    text-align: center;
+  }
+  .result-restart__btn {
+    background: transparent;
+    border: 1px solid var(--ash);
+    color: var(--ash);
+    padding: var(--space-3) var(--space-8);
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+    margin-bottom: var(--space-4);
+  }
+  .result-restart__btn:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .result-restart__note {
+    font-family: var(--font-ui);
+    font-size: var(--text-3xs);
+    letter-spacing: 0.08em;
+    color: var(--ash);
+  }
+</style>
