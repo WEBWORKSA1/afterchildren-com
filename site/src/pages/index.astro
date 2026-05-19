@@ -4,47 +4,126 @@ import Newsletter from '../components/Newsletter.astro';
 ---
 
 <Base title="AfterChildren">
-  <!-- HERO -->
+  <!-- HERO with architectural SVG anchor -->
   <section class="page">
-    <div class="hero">
-      <p class="hero__eyebrow">For parents whose children are grown</p>
-      <h1 class="hero__title">
-        You raised them.<br />
-        <em>Now build yourself.</em>
-      </h1>
-      <p class="hero__lede">
-        Your adult children are not your retirement plan. They are not your healthcare plan. They are not your loneliness plan. AfterChildren is the unfiltered guide to the second half — for parents who refuse to be a burden, refuse to be invisible, and refuse to outsource their future.
-      </p>
+    <div class="hero hero--with-visual">
+      <div class="hero__content">
+        <p class="hero__eyebrow">For parents whose children are grown</p>
+        <h1 class="hero__title">
+          You raised them.<br />
+          <em>Now build yourself.</em>
+        </h1>
+        <p class="hero__lede">
+          Your adult children are not your retirement plan. They are not your healthcare plan. They are not your loneliness plan. AfterChildren is the unfiltered guide to the second half — for parents who refuse to be a burden, refuse to be invisible, and refuse to outsource their future.
+        </p>
+        <a href="/start" class="hero__cta">
+          Not sure where to start? Take the 5-minute assessment
+          <span class="hero__arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+      <!--
+        The architectural mark.
+        Five horizontal layers, ember linework on bone.
+        Reads as a blueprint of the five sovereignties.
+        Restrained, structural, not decorative.
+      -->
+      <svg
+        class="hero__visual"
+        viewBox="0 0 320 480"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        role="presentation"
+      >
+        <!-- Outer frame -->
+        <rect x="40" y="40" width="240" height="400" fill="none" stroke="var(--ink)" stroke-width="1.5" />
+
+        <!-- LAYER 05: Living (roof) -->
+        <polyline points="40,40 160,8 280,40" fill="none" stroke="var(--ember)" stroke-width="1.5" />
+        <text x="160" y="62" text-anchor="middle" class="hero__visual-label">05 · LIVING</text>
+        <line x1="60" y1="80" x2="260" y2="80" stroke="var(--stone)" stroke-width="1" stroke-dasharray="3,3" />
+
+        <!-- LAYER 04: Legal (walls) -->
+        <text x="160" y="120" text-anchor="middle" class="hero__visual-label">04 · LEGAL</text>
+        <line x1="60" y1="160" x2="260" y2="160" stroke="var(--ember)" stroke-width="1.5" />
+
+        <!-- LAYER 03: Mind (structure) -->
+        <text x="160" y="200" text-anchor="middle" class="hero__visual-label">03 · MIND</text>
+        <line x1="90" y1="240" x2="230" y2="240" stroke="var(--stone)" stroke-width="1" />
+        <line x1="160" y1="180" x2="160" y2="240" stroke="var(--stone)" stroke-width="1" />
+
+        <line x1="60" y1="260" x2="260" y2="260" stroke="var(--ember)" stroke-width="1.5" />
+
+        <!-- LAYER 02: Money (fuel) -->
+        <text x="160" y="300" text-anchor="middle" class="hero__visual-label">02 · MONEY</text>
+        <line x1="60" y1="340" x2="260" y2="340" stroke="var(--ember)" stroke-width="1.5" />
+
+        <!-- LAYER 01: Body (foundation) -->
+        <text x="160" y="380" text-anchor="middle" class="hero__visual-label">01 · BODY</text>
+        <rect x="40" y="400" width="240" height="40" fill="var(--ember)" fill-opacity="0.08" stroke="var(--ember)" stroke-width="1.5" />
+
+        <!-- Ground line -->
+        <line x1="20" y1="440" x2="300" y2="440" stroke="var(--ink)" stroke-width="1" />
+        <line x1="20" y1="445" x2="40" y2="465" stroke="var(--ink)" stroke-width="0.5" />
+        <line x1="60" y1="445" x2="80" y2="465" stroke="var(--ink)" stroke-width="0.5" />
+        <line x1="100" y1="445" x2="120" y2="465" stroke="var(--ink)" stroke-width="0.5" />
+        <line x1="140" y1="445" x2="160" y2="465" stroke="var(--ink)" stroke-width="0.5" />
+        <line x1="180" y1="445" x2="200" y2="465" stroke="var(--ink)" stroke-width="0.5" />
+        <line x1="220" y1="445" x2="240" y2="465" stroke="var(--ink)" stroke-width="0.5" />
+        <line x1="260" y1="445" x2="280" y2="465" stroke="var(--ink)" stroke-width="0.5" />
+      </svg>
     </div>
   </section>
 
-  <!-- FIVE PILLARS -->
-  <section class="page">
+  <!-- FIVE PILLARS with differentiated motifs -->
+  <section class="page" data-reveal>
     <div class="pillars">
       <p class="pillars__eyebrow">The Five Sovereignties</p>
       <h2 class="pillars__title">Five things you have to build, in roughly this order.</h2>
       <div class="pillars__grid">
-        <a href="/body" class="pillar" style="border-bottom: 0;">
+        <a href="/body" class="pillar pillar--01">
+          <svg class="pillar__motif" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="4" y="26" width="32" height="10" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <line x1="4" y1="36" x2="36" y2="36" stroke="currentColor" stroke-width="2.5" />
+          </svg>
           <div class="pillar__number">01</div>
           <h3 class="pillar__title">Body</h3>
           <p class="pillar__desc">The foundation. Everything else sits on it. The single highest-return decision in your 50s and 60s.</p>
         </a>
-        <a href="/money" class="pillar" style="border-bottom: 0;">
+        <a href="/money" class="pillar pillar--02">
+          <svg class="pillar__motif" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="17" y="4" width="6" height="32" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <line x1="14" y1="8" x2="26" y2="8" stroke="currentColor" stroke-width="1.5" />
+            <line x1="14" y1="32" x2="26" y2="32" stroke="currentColor" stroke-width="1.5" />
+          </svg>
           <div class="pillar__number">02</div>
           <h3 class="pillar__title">Money</h3>
           <p class="pillar__desc">The fuel. Without it, nothing else is optional. The retirement math has to actually work — not "approximately" work.</p>
         </a>
-        <a href="/mind" class="pillar" style="border-bottom: 0;">
+        <a href="/mind" class="pillar pillar--03">
+          <svg class="pillar__motif" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="6" y="6" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <line x1="6" y1="6" x2="34" y2="34" stroke="currentColor" stroke-width="1" />
+            <line x1="34" y1="6" x2="6" y2="34" stroke="currentColor" stroke-width="1" />
+          </svg>
           <div class="pillar__number">03</div>
           <h3 class="pillar__title">Mind</h3>
           <p class="pillar__desc">The structure that holds the meaning. Purpose, marriage, friendship, cognition — built on purpose, not by default.</p>
         </a>
-        <a href="/legal" class="pillar" style="border-bottom: 0;">
+        <a href="/legal" class="pillar pillar--04">
+          <svg class="pillar__motif" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="6" y1="4" x2="6" y2="36" stroke="currentColor" stroke-width="2.5" />
+            <line x1="34" y1="4" x2="34" y2="36" stroke="currentColor" stroke-width="2.5" />
+            <line x1="20" y1="4" x2="20" y2="36" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2" />
+          </svg>
           <div class="pillar__number">04</div>
           <h3 class="pillar__title">Legal</h3>
           <p class="pillar__desc">The walls. The protections against the worst outcomes. Five documents most people don't have.</p>
         </a>
-        <a href="/living" class="pillar" style="border-bottom: 0;">
+        <a href="/living" class="pillar pillar--05">
+          <svg class="pillar__motif" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <polyline points="4,28 20,8 36,28" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <line x1="4" y1="28" x2="36" y2="28" stroke="currentColor" stroke-width="2.5" />
+          </svg>
           <div class="pillar__number">05</div>
           <h3 class="pillar__title">Living</h3>
           <p class="pillar__desc">The roof. Where and how you live for the next 30 years. The decision with the most variance and the least examination.</p>
@@ -54,18 +133,20 @@ import Newsletter from '../components/Newsletter.astro';
   </section>
 
   <!-- IN-DEPTH ARTICLES (Tier 1 conversion engines) -->
-  <section class="page">
+  <section class="page" data-reveal>
     <div class="articles">
       <p class="articles__eyebrow">In-depth</p>
       <h2 class="articles__title">The work, broken down.</h2>
 
-      <a href="/legal/five-essential-documents-over-55" class="article-card">
+      <a href="/legal/five-essential-documents-over-55" class="article-card article-card--tier-1">
+        <span class="article-card__badge">Tier 1</span>
         <span class="article-card__category">Legal · 13 min read · New</span>
         <h3 class="article-card__title">The Five Documents Every Adult Over 55 Needs (And Most People Don't Have)</h3>
         <p class="article-card__excerpt">The cornerstone article for the Legal pillar. What each document costs, what happens to your family without it, and the Saturday-morning execution plan to complete all five in one sitting.</p>
       </a>
 
-      <a href="/money/medicare-advantage-vs-medigap-2026" class="article-card">
+      <a href="/money/medicare-advantage-vs-medigap-2026" class="article-card article-card--tier-1">
+        <span class="article-card__badge">Tier 1</span>
         <span class="article-card__category">Money · 16 min read · New</span>
         <h3 class="article-card__title">Medicare Advantage vs Medigap: The Honest Comparison for 2026</h3>
         <p class="article-card__excerpt">The decision that locks in for life — and the marketing that obscures it. The five dimensions that actually matter, the 2026 rule changes, and the honest answer for most healthy 65-year-olds.</p>
@@ -74,7 +155,7 @@ import Newsletter from '../components/Newsletter.astro';
   </section>
 
   <!-- MANIFESTO CLUSTER -->
-  <section class="page">
+  <section class="page" data-reveal>
     <div class="articles">
       <p class="articles__eyebrow">The Manifestos</p>
       <h2 class="articles__title">The four founding essays.</h2>
@@ -113,3 +194,147 @@ import Newsletter from '../components/Newsletter.astro';
 
   <Newsletter />
 </Base>
+
+<style>
+  /* =========================================================
+     Homepage-specific styles
+     Adds visual differentiation for the hero, pillar motifs,
+     and article card hierarchy.
+     ========================================================= */
+
+  /* Hero with side-by-side visual */
+  .hero--with-visual {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .hero--with-visual {
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-24);
+    }
+  }
+
+  .hero__content { max-width: 36rem; }
+
+  .hero__visual {
+    width: 100%;
+    max-width: 22rem;
+    height: auto;
+    justify-self: center;
+    margin-top: var(--space-8);
+  }
+  @media (min-width: 900px) {
+    .hero__visual { margin-top: 0; justify-self: end; }
+  }
+
+  .hero__visual-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    fill: var(--ash);
+  }
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-12);
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ember);
+    border-bottom: 1px solid var(--ember);
+    padding-bottom: 4px;
+    text-decoration: none;
+    transition: gap 0.25s var(--ease-out);
+  }
+  .hero__cta:hover { gap: var(--space-4); color: var(--ember); }
+  .hero__arrow { display: inline-block; transition: transform 0.25s var(--ease-out); }
+  .hero__cta:hover .hero__arrow { transform: translateX(4px); }
+
+  /* Pillar motifs */
+  .pillar {
+    position: relative;
+    color: var(--ember);
+  }
+  .pillar__motif {
+    position: absolute;
+    top: var(--space-8);
+    right: var(--space-8);
+    width: 36px;
+    height: 36px;
+    color: var(--ember);
+    opacity: 0.45;
+    transition: opacity 0.3s var(--ease-out);
+  }
+  .pillar:hover .pillar__motif { opacity: 1; }
+
+  /* Article card hierarchy */
+  .article-card { position: relative; }
+  .article-card--tier-1 {
+    border-left: 3px solid var(--ember);
+    padding-left: var(--space-6);
+    background: linear-gradient(to right, rgba(181, 66, 30, 0.02), transparent 40%);
+  }
+  .article-card--tier-1:hover {
+    background: linear-gradient(to right, rgba(181, 66, 30, 0.05), transparent 40%);
+    padding-left: var(--space-8);
+  }
+  .article-card__badge {
+    position: absolute;
+    top: var(--space-8);
+    right: 0;
+    font-family: var(--font-ui);
+    font-size: var(--text-3xs);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: #E07A4F;
+    padding: 4px 10px;
+  }
+  .article-card--tier-1 .article-card__title {
+    font-size: clamp(1.6rem, 3vw, var(--text-2xl));
+  }
+
+  /* Scroll reveal — applied via JS */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  }
+  [data-reveal].is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Scroll reveal — single-pass IntersectionObserver
+  if ('IntersectionObserver' in window) {
+    const elements = document.querySelectorAll('[data-reveal]');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -8% 0px' });
+    elements.forEach((el) => observer.observe(el));
+  } else {
+    document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-revealed'));
+  }
+</script>
